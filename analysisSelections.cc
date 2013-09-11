@@ -17,6 +17,7 @@ using namespace std;
 #include "../CORE/jetSelections.h"
 #include "../CORE/metSelections.h"
 #include "../Tools/MuonEffectiveArea.h"
+#include "../Tools/pfjetMVAtools.h"
 #endif
 
 //
@@ -805,29 +806,35 @@ bool toptag(WWJetType type, int i_hyp, double minPt, FactorizedJetCorrector *jet
         std::vector<JetPair> ignoreJets)
 {
     const double vetoCone    = 0.3;
-
+    // bug fix for mva jet id
+    vector <float> fixedpfjetmva_analsel; getGoodMVAs(fixedpfjetmva_analsel, "mvavalue"); 
+    
     switch ( type ){
-        case pfJet:
+        case pfJet: 
             for ( unsigned int i=0; i < cms2.pfjets_p4().size(); ++i) {
+                
                 if ( cms2.pfjets_p4()[i].pt() < minPt ) continue;
                 bool ignoreJet = false;
                 for ( std::vector<JetPair>::const_iterator ijet = ignoreJets.begin();
                         ijet != ignoreJets.end(); ++ijet )
                     if ( TMath::Abs(ROOT::Math::VectorUtil::DeltaR(ijet->first,cms2.pfjets_p4()[i])) < vetoCone ) ignoreJet=true;
                 if ( ignoreJet ) continue;
+
                 if ( TMath::Abs(ROOT::Math::VectorUtil::DeltaR(cms2.hyp_lt_p4()[i_hyp],cms2.pfjets_p4()[i])) < vetoCone ||
 						TMath::Abs(ROOT::Math::VectorUtil::DeltaR(cms2.hyp_ll_p4()[i_hyp],cms2.pfjets_p4()[i])) < vetoCone ) continue;
 
-				double jec = 1.0;
+                double jec = 1.0;
 				jet_corrector_pfL1FastJetL2L3->setRho(cms2.evt_ww_rho()); 
 				jet_corrector_pfL1FastJetL2L3->setJetA(cms2.pfjets_area().at(i));
 				jet_corrector_pfL1FastJetL2L3->setJetPt(cms2.pfjets_p4()[i].pt());
 				jet_corrector_pfL1FastJetL2L3->setJetEta(cms2.pfjets_p4()[i].eta());
 				double corr = jet_corrector_pfL1FastJetL2L3->getCorrection();
 				jec *= corr;
-
-				if ( !passMVAJetId( cms2.pfjets_p4()[i].pt() * jec, cms2.pfjets_p4()[i].eta(), cms2.pfjets_mvavalue()[i], 2) ) continue;
                
+				//if ( !passMVAJetId( cms2.pfjets_p4()[i].pt() * jec, cms2.pfjets_p4()[i].eta(), cms2.pfjets_mvavalue()[i], 2) ) continue;
+				if ( !passMVAJetId( cms2.pfjets_p4()[i].pt() * jec, cms2.pfjets_p4()[i].eta(), fixedpfjetmva_analsel[i], 2) ) continue;
+                 
+
 				if ( !defaultBTag(type,i, jec) ) continue;
 				
                 return true;
@@ -885,7 +892,7 @@ bool passMVAJetId(double corjetpt, double jeteta, double mvavalue, unsigned int 
 	fMVACut[2][2][0] =  0.2; fMVACut[2][2][1] = -0.6; fMVACut[2][2][2] = -0.6; fMVACut[2][2][3] = -0.4;
 	fMVACut[2][3][0] =  0.2; fMVACut[2][3][1] = -0.8; fMVACut[2][3][2] = -0.8; fMVACut[2][3][3] = -0.4;
 */	
-
+///*
 	// These cuts are for 42X but used for 52X jet Id
 	//Tight Id
 	fMVACut[0][0][0] =  0.5; fMVACut[0][0][1] = 0.6; fMVACut[0][0][2] = 0.6; fMVACut[0][0][3] = 0.9;
@@ -898,11 +905,15 @@ bool passMVAJetId(double corjetpt, double jeteta, double mvavalue, unsigned int 
 	fMVACut[1][2][0] =  0.2; fMVACut[1][2][1] = 0.2; fMVACut[1][2][2] = 0.5; fMVACut[1][2][3] = 0.7;
 	fMVACut[1][3][0] =  0.3; fMVACut[1][3][1] = 0.2; fMVACut[1][3][2] = 0.7; fMVACut[1][3][3] = 0.8;
 	//Loose Id 
-	fMVACut[2][0][0] =  0. ; fMVACut[2][0][1] =  0. ; fMVACut[2][0][2] =  0. ; fMVACut[2][0][3] = 0.2;
+	//fMVACut[2][0][0] =  0. ; fMVACut[2][0][1] =  0. ; fMVACut[2][0][2] =  0. ; fMVACut[2][0][3] = 0.2;
+	//fMVACut[2][1][0] = -0.4; fMVACut[2][1][1] = -0.4; fMVACut[2][1][2] = -0.4; fMVACut[2][1][3] = 0.4;
+	//fMVACut[2][2][0] =  0. ; fMVACut[2][2][1] =  0. ; fMVACut[2][2][2] =  0.2; fMVACut[2][2][3] = 0.6;
+	//fMVACut[2][3][0] =  0. ; fMVACut[2][3][1] =  0. ; fMVACut[2][3][2] =  0.6; fMVACut[2][3][3] = 0.2;
+	fMVACut[2][0][0] = -0.2; fMVACut[2][0][1] =  0. ; fMVACut[2][0][2] =  0.2; fMVACut[2][0][3] = 0.5;
 	fMVACut[2][1][0] = -0.4; fMVACut[2][1][1] = -0.4; fMVACut[2][1][2] = -0.4; fMVACut[2][1][3] = 0.4;
 	fMVACut[2][2][0] =  0. ; fMVACut[2][2][1] =  0. ; fMVACut[2][2][2] =  0.2; fMVACut[2][2][3] = 0.6;
 	fMVACut[2][3][0] =  0. ; fMVACut[2][3][1] =  0. ; fMVACut[2][3][2] =  0.6; fMVACut[2][3][3] = 0.2;
-
+//*/
 
 	// pT categorization
 	int ptId = 0;

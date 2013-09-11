@@ -2,6 +2,7 @@
 #include "analysisSelections.h"
 #include "../CORE/trackSelections.h"
 #include "../CORE/electronSelections.h"
+#include "../Tools/pfjetMVAtools.h"
 
 #include "Math/VectorUtil.h"
 
@@ -54,6 +55,8 @@ getJets(WWJetType type, LorentzVector &lt, LorentzVector &ll, double etThreshold
 {
     std::vector<JetPair> jets;
     const double vetoCone = 0.3;
+    // bug fix for mva jet id
+    vector <float> fixedpfjetmva_analobj; getGoodMVAs(fixedpfjetmva_analobj, "mvavalue"); 
 
     switch ( type ){
 	/*
@@ -98,7 +101,8 @@ getJets(WWJetType type, LorentzVector &lt, LorentzVector &ll, double etThreshold
                 if ( (lt.Pt() > 0 && TMath::Abs(ROOT::Math::VectorUtil::DeltaR(lt, cms2.pfjets_p4()[i])) < vetoCone) ||
                         (ll.Pt() > 0 && TMath::Abs(ROOT::Math::VectorUtil::DeltaR(ll, cms2.pfjets_p4()[i])) < vetoCone) ) continue;
 
-				if ( !passMVAJetId( cms2.pfjets_p4()[i].pt() * jec, cms2.pfjets_p4()[i].eta(), cms2.pfjets_mvavalue()[i], 2) ) continue;
+				//if ( !passMVAJetId( cms2.pfjets_p4()[i].pt() * jec, cms2.pfjets_p4()[i].eta(), cms2.pfjets_mvavalue()[i], 2) ) continue; 
+				if ( !passMVAJetId( cms2.pfjets_p4()[i].pt() * jec, cms2.pfjets_p4()[i].eta(), fixedpfjetmva_analobj[i], 2) ) continue;
 
                 // cout << " \tpassed all cuts" << endl;
                 jets.push_back(JetPair(cms2.pfjets_p4()[i] * jec,i));
@@ -213,7 +217,7 @@ bool defaultBTag(WWJetType type, unsigned int iJet, float jec) {
     
 	switch ( type ) {
         case pfJet:
-			if ( cms2.pfjets_trackCountingHighEffBJetTag()[iJet] > 2.1) return true;
+            if ( cms2.pfjets_trackCountingHighEffBJetTag()[iJet] > 2.1) return true;
             break;
         default:
             std::cout << "ERROR: Please use PFJets : " << type << " FixIt!" << std::endl;
