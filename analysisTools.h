@@ -4,7 +4,7 @@
 #include "TH2D.h"
 #include "TH1D.h"
 
-#include "../../../Smurf/Core/SmurfTree.h"
+#include "../Smurf/Core/SmurfTree.h"
 #include "analysisEnums.h"
 
 #include <vector>

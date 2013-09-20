@@ -13,7 +13,7 @@
 #include "../Tools/EGammaMvaEleEstimator.h"
 #include "../Tools/MuonMVAEstimator.h"
 
-#include "../../../Smurf/Core/SmurfTree.h"
+#include "../Smurf/Core/SmurfTree.h"
 #include "wwtypes.h"
 #include "analysisEnums.h"
 #include "analysisObjects.h"
